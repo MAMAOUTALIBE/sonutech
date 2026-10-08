@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Validation — Assistant SONUTECH</title>
+<style>
+:root{--navy:#071e54;--blue:#0068ff;--turquoise:#00c9c7;--muted:#526581;--border:#e3ebf4;--soft:#f3f8fc;--danger:#a62727}
+*{box-sizing:border-box}
+body{margin:0;background:#f6f9fc;color:var(--navy);font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5}
+main{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+header strong{font-size:20px;letter-spacing:-.5px}
+header span{color:var(--muted);font-size:13px}
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:16px}
+h1{font-size:24px;line-height:1.25;margin:0 0 6px;letter-spacing:-.5px}
+h2{font-size:17px;margin:0 0 12px}
+p{margin:0 0 10px;color:var(--muted)}
+dl{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;margin:0}
+dt{color:var(--muted);font-size:14px}
+dd{margin:0;overflow-wrap:anywhere}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:700;background:#e8f2ff;color:var(--blue)}
+.badge.hot{background:#ffece6;color:#b23c0e}.badge.cold{background:#eef2f6;color:var(--muted)}
+.alert{background:#fff4e5;border:1px solid #f7d9ab;color:#7a4b00;border-radius:10px;padding:12px 14px;margin:12px 0 0}
+.message{white-space:pre-wrap;background:var(--soft);border-radius:10px;padding:14px;color:var(--navy);margin:0}
+ul{margin:0;padding-left:20px;color:var(--muted)}
+label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
+input,textarea{width:100%;border:1px solid #cfdbe8;border-radius:8px;padding:11px 12px;font:inherit;color:var(--navy);background:#fcfdff}
+textarea{min-height:280px;resize:vertical}
+.signature{font-size:13px;margin-top:6px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+button{border:0;border-radius:10px;padding:14px 20px;font:inherit;font-weight:700;cursor:pointer}
+.send{background:var(--blue);color:#fff}.send:hover{background:#0056de}
+.reject{background:#fff;color:var(--danger);border:1px solid #efc9c9}.reject:hover{background:#fff2f2}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #0097a8;outline-offset:3px}
+.error{color:var(--danger);font-weight:700}
+.done{text-align:center;padding:40px 22px}
+@media (max-width:560px){dl{grid-template-columns:1fr}dt{margin-top:6px}button{width:100%}}
+</style>
+</head>
+<body>
+<main>
+<header><strong>SONUTECH</strong><span>Assistant IA · validation</span></header>
+{% if state == 'invalid' %}
+<section class="card done"><h1>Lien invalide ou déjà utilisé</h1><p>Ce message a peut-être déjà été envoyé ou refusé. Les demandes restent consultables via l’API de gestion.</p></section>
+{% elif state == 'expired' %}
+<section class="card done"><h1>Lien expiré</h1><p>Par sécurité, ce lien n’est plus valable. Le message reste en attente de validation via l’API de gestion.</p></section>
+{% elif state == 'done' %}
+<section class="card done">
+{% if action == 'send' %}<h1>{% if sent %}Message envoyé{% else %}Message validé{% endif %}</h1><p>{% if sent %}Votre réponse est partie à {{ inquiry.email }}.{% else %}L’envoi sera réessayé automatiquement dans quelques minutes.{% endif %}</p>
+{% else %}<h1>Message refusé</h1><p>Rien n’a été envoyé et les relances prévues pour cette demande sont annulées.</p>{% endif %}
+</section>
+{% else %}
+<section class="card">
+<h1>{{ label }} à valider</h1>
+<p>Demande reçue le {{ inquiry.created_at|date:"d/m/Y à H:i" }}</p>
+{% if triage.temperature %}<span class="badge {{ triage.temperature }}">Intérêt {{ triage.get_temperature_display|lower }} · {{ triage.score }}/100</span>{% endif %}
+{% if triage.escalated %}<p class="alert"><strong>À traiter en priorité :</strong> {{ triage.escalation_reason }}</p>{% endif %}
+</section>
+<section class="card">
+<h2>La demande</h2>
+<dl>
+<dt>Type</dt><dd>{{ inquiry.get_kind_display }}{% if inquiry.domain %} · {{ inquiry.domain.title }}{% endif %}</dd>
+<dt>Nom</dt><dd>{{ inquiry.name }}</dd>
+{% if inquiry.company %}<dt>Entreprise</dt><dd>{{ inquiry.company }}</dd>{% endif %}
+<dt>Email</dt><dd>{{ inquiry.email }}</dd>
+{% if inquiry.phone %}<dt>Téléphone</dt><dd>{{ inquiry.phone }}</dd>{% endif %}
+{% if inquiry.course %}<dt>Formation</dt><dd>{{ inquiry.course.title }}</dd>{% endif %}
+{% if inquiry.project_type %}<dt>Type de projet</dt><dd>{{ inquiry.project_type }}</dd>{% endif %}
+{% if inquiry.budget %}<dt>Budget</dt><dd>{{ inquiry.budget }}</dd>{% endif %}
+{% if inquiry.deadline %}<dt>Échéance</dt><dd>{{ inquiry.deadline }}</dd>{% endif %}
+</dl>
+<label>Message</label>
+<p class="message">{{ inquiry.message }}</p>
+</section>
+{% if triage.summary %}
+<section class="card">
+<h2>Analyse de l’assistant</h2>
+<p>{{ triage.summary }}</p>
+{% if triage.needs %}<ul>{% for need in triage.needs %}<li>{{ need }}</li>{% endfor %}</ul>{% endif %}
+{% if triage.next_step %}<p style="margin-top:10px"><strong>Prochaine étape conseillée :</strong> {{ triage.next_step }}</p>{% endif %}
+{% if triage.quote_outline %}<label>Pré-devis (usage interne)</label><p class="message">{{ triage.quote_outline }}</p>{% endif %}
+</section>
+{% endif %}
+<section class="card">
+<h2>{{ label }} proposée</h2>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form method="post">
+<label for="subject">Objet</label>
+<input id="subject" name="subject" maxlength="200" required value="{{ subject }}">
+<label for="body">Message</label>
+<textarea id="body" name="body" maxlength="6000" required>{{ body }}</textarea>
+<p class="signature">Signature ajoutée automatiquement : « {{ signature }} » · Destinataire : {{ inquiry.email }}</p>
+<div class="actions">
+<button class="send" type="submit" name="action" value="send">Envoyer ce message</button>
+<button class="reject" type="submit" name="action" value="reject" formnovalidate>Refuser</button>
+</div>
+</form>
+</section>
+{% endif %}
+</main>
+</body>
+</html>

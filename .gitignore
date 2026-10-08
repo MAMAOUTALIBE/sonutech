@@ -1,0 +1,27 @@
+# Secrets and local state
+.env
+.env.*
+!.env.example
+.local/
+backups/
+var/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+backend/media/
+backend/staticfiles/
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+# OS / tools
+.DS_Store
+*.log
+# Browser verification output
+frontend/test-results/
+frontend/playwright-report/

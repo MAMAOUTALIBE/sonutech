@@ -1,0 +1,11 @@
+{% extends 'crm/base.html' %}
+{% block title %}Relire un message{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'chatbot:draft_list' %}">← Tous les brouillons</a>
+<div class="page-heading"><div><p class="eyebrow">RÉDIGÉ PAR L’IA · VALIDÉ PAR VOUS</p><h1>Un message pour {{ draft.lead.name }}</h1><p>{{ draft.get_status_display }}{% if draft.sent_at %} · {{ draft.sent_at|date:'d/m/Y à H:i' }}{% endif %}</p></div><a class="button secondary" href="{% url 'crm:prospect_detail' draft.lead.pk %}">Voir le prospect</a></div>
+{% if draft.analysis %}<section class="panel padded"><h2>Le besoin en quelques mots</h2><p class="pre-line">{{ draft.analysis }}</p></section>{% endif %}
+{% if draft.last_error %}<p class="message">{{ draft.last_error }}</p>{% endif %}
+<section class="panel"><form method="post" class="editor">{% csrf_token %}<p class="intro">Destinataire : <strong>{{ draft.lead.email|default:'Email non renseigné sur la fiche prospect' }}</strong></p>{% include 'crm/fields.html' %}
+{% if draft.status == 'pending' %}<div class="assistant-actions"><button class="button secondary" type="submit" name="action" value="save">Enregistrer le brouillon</button>{% if can_approve %}<button class="button" type="submit" name="action" value="send" {% if not smtp_ready or not draft.lead.email %}disabled{% endif %}>Valider et envoyer cet email</button>{% endif %}<button class="text-button" type="submit" name="action" value="reject" formnovalidate>Refuser ce brouillon</button></div>{% endif %}
+{% if not smtp_ready %}<p class="help">La messagerie doit être configurée avant l’envoi. Votre brouillon est conservé.</p>{% elif not can_approve %}<p class="help">Le responsable du compte peut valider l’envoi de ce message.</p>{% endif %}</form></section>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'crm/base.html' %}
+{% block title %}Brouillons IA{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'crm:prospect_list' %}">← Retour aux prospects</a>
+<div class="page-heading"><div><p class="eyebrow">VOUS AVEZ LE DERNIER MOT</p><h1>Vos messages à valider</h1><p>Relisez, ajustez et décidez. Aucun email commercial ne part sans votre validation.</p></div>{% if perms.chatbot.change_assistantconfiguration %}<a class="button secondary" href="{% url 'chatbot:assistant_settings' %}">Réglages de l’assistant</a>{% endif %}</div>
+{% if not smtp_ready %}<p class="message">L’envoi d’emails reste à configurer. Vous pouvez préparer vos brouillons et copier leur contenu.</p>{% endif %}
+<section class="panel"><nav class="tabs" aria-label="Statut des brouillons"><a href="?filter=pending" {% if filter == 'pending' %}aria-current="page"{% endif %}>À valider</a><a href="?filter=sent" {% if filter == 'sent' %}aria-current="page"{% endif %}>Envoyés</a><a href="?filter=all" {% if filter == 'all' %}aria-current="page"{% endif %}>Tous</a></nav>
+{% for draft in page_obj %}<article class="task-row"><div class="row-content"><h2><a href="{% url 'chatbot:draft_detail' draft.pk %}">{{ draft.subject }}</a></h2><p>{{ draft.lead.name }}{% if draft.lead.company %} · {{ draft.lead.company }}{% endif %}</p><p class="meta">{{ draft.created_at|date:'d/m/Y à H:i' }} · {{ draft.get_status_display }}</p></div><a class="button secondary small" href="{% url 'chatbot:draft_detail' draft.pk %}">Relire le message</a></article>{% empty %}<div class="empty"><h2>Aucun brouillon dans cette liste</h2><p>Ouvrez une fiche prospect et choisissez « Préparer un message IA » pour commencer.</p><a class="button" href="{% url 'crm:prospect_list' %}">Voir les prospects</a></div>{% endfor %}{% include 'crm/pagination.html' %}</section>
+{% endblock %}
